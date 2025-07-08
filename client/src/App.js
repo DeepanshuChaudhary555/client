@@ -4,9 +4,9 @@ import Navigation from "./components/navigation";
 import Home from "./components/home";
 import PreviewImage from "./components/previewimage";
 import UploadImage from "./components/uploadimage";
-import Signup from "./components/signup/Signup";
-import Login from "./components/login/Login";
-import Profile from "./components/profile/Profile";
+import Signup from "./components/Signup";
+import Login from "./components/Login";
+import Profile from "./components/Profile";
 import "./App.css";
 
 const App = () => {
