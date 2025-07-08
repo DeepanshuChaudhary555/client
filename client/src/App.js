@@ -11,10 +11,9 @@ import "./App.css";
 
 const App = () => {
   const location = useLocation();
-  const hideNavbar = location.pathname === "/" || location.pathname === "/login";
   return (
     <div className="app">
-      { !hideNavbar && <Navigation />}
+      <Navigation />
       <Main></Main>
     </div>
   );
