@@ -35,39 +35,29 @@ const Navigation = () => (
               Upload Images
             </NavLink>
           </li>
-          <li className="nav-item dropdown ">
-            <NavLink
-              className="nav-link dropdown-toggle"
-             to="#"
-              role="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              My Account
-            </NavLink>
-            <ul className="dropdown-menu ms-auto me-auto">
-              <li>
-                <NavLink className="dropdown-item" to="/changeUsername">
-                  Change username
-                </NavLink>
-              </li>
-              <li>
-                <NavLink className="dropdown-item" to="/changeEmail">
-                  Change email
-                </NavLink>
-              </li>
-              <li>
-                <NavLink className="dropdown-item" to="/changePassword">
-                  Change password
-                </NavLink>
-              </li>
-              <li>
-                <NavLink className="dropdown-item" to="/">
-                  Logout
-                </NavLink>
-              </li>
-            </ul>
-          </li>
+            <li className="nav-item dropdown ">
+              <NavLink
+                className="nav-link dropdown-toggle"
+                to="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                My Account
+              </NavLink>
+              <ul className="dropdown-menu">
+                <li>
+                  <NavLink className="dropdown-item" to="/profile">
+                    Profile
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink className="dropdown-item" to="/">
+                    Logout
+                  </NavLink>
+                </li>
+              </ul>
+            </li>
         </ul>
       </div>
     </div>

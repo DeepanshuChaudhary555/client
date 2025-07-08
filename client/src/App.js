@@ -4,8 +4,9 @@ import Navigation from "./components/navigation";
 import Home from "./components/home";
 import PreviewImage from "./components/previewimage";
 import UploadImage from "./components/uploadimage";
-import Signup from "./signup/Signup";
+import Signup from "./components/signup/Signup";
 import Login from "./components/login/Login";
+import Profile from "./components/profile/Profile";
 import "./App.css";
 
 const App = () => {
@@ -13,7 +14,6 @@ const App = () => {
   const hideNavbar = location.pathname === "/" || location.pathname === "/login";
   return (
     <div className="app">
-      {/* <h1 className="text-center">IMAGE UPLOADER</h1> */}
       { !hideNavbar && <Navigation />}
       <Main></Main>
     </div>
@@ -27,6 +27,7 @@ const Main = () => (
     <Route path="/home" element={<Home></Home>}></Route>
     <Route path="/previewimage" element={<PreviewImage></PreviewImage>}></Route>
     <Route path="/uploadimage" element={<UploadImage></UploadImage>}></Route>
+    <Route path="/profile" element={<Profile></Profile>}></Route>
   </Routes>
 );
 
