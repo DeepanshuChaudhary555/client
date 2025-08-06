@@ -1,14 +1,15 @@
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import Modal from "react-bootstrap/Modal";
+import Button from "react-bootstrap/Button";
 
 const PreviewImage = () => {
   const [images, setImages] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [deleting, setDeleting] = useState(null); // track deleting image filename
-
+  const [deleting, setDeleting] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const fetchImages = async () => {
     setLoading(true);
     setError("");
@@ -18,8 +19,7 @@ const PreviewImage = () => {
       });
       setImages(res.data);
     } catch (err) {
-      const errMsg = err.response?.data?.error || "Failed to fetch images.";
-      setError(errMsg);
+      setError(err.response?.data?.error || "Failed to fetch images.");
     } finally {
       setLoading(false);
     }
@@ -35,8 +35,8 @@ const PreviewImage = () => {
         { filename },
         { withCredentials: true }
       );
-      setImages((prev) => prev.filter((img) => img !== filename));
-    } catch (err) {
+      setImages((prev) => prev.filter((img) => img.filename !== filename));
+    } catch {
       alert("Failed to delete image.");
     } finally {
       setDeleting(null);
@@ -47,24 +47,23 @@ const PreviewImage = () => {
     fetchImages();
   }, []);
 
-  const filteredImages = images.filter((img) =>
-    img.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredImages = images.filter(
+    (img) =>
+      img.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      img.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="container mt-5">
       <h2 className="mb-4">Uploaded Images</h2>
 
-      {/* 🔍 Search bar */}
-      <div className="mb-4">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Search images by filename..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
+      <input
+        type="text"
+        className="form-control mb-4"
+        placeholder="Search images by filename or title..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
 
       {error && <div className="alert alert-danger">{error}</div>}
 
@@ -72,23 +71,25 @@ const PreviewImage = () => {
         <p>Loading images...</p>
       ) : filteredImages.length > 0 ? (
         <div className="row mt-4">
-          {filteredImages.map((img) => (
-            <div key={img} className="col-md-4 mb-3">
+          {filteredImages.map(({ filename, title }) => (
+            <div key={filename} className="col-md-4 mb-3">
               <div className="card">
                 <img
-                  src={`http://localhost:5000/uploads/${img}`}
-                  alt={img}
+                  src={`http://localhost:5000/uploads/${filename}`}
+                  alt={title}
                   className="card-img-top"
-                  style={{ objectFit: "cover", height: "200px" }}
+                  style={{ objectFit: "cover", height: "200px", cursor: "pointer" }}
+                  onClick={() => setSelectedImage({ filename, title })}
                 />
                 <div className="card-body text-center">
-                  <p className="text-muted small mb-2">{img}</p>
+                  <p className="mb-1 fw-bold">{title}</p>
+                  <p className="text-muted small">{filename}</p>
                   <button
                     className="btn btn-danger"
-                    onClick={() => handleDelete(img)}
-                    disabled={deleting === img}
+                    onClick={() => handleDelete(filename)}
+                    disabled={deleting === filename}
                   >
-                    {deleting === img ? "Deleting..." : "Delete"}
+                    {deleting === filename ? "Deleting..." : "Delete"}
                   </button>
                 </div>
               </div>
@@ -98,6 +99,29 @@ const PreviewImage = () => {
       ) : (
         <p>No images found.</p>
       )}
+
+      <Modal
+        show={!!selectedImage}
+        onHide={() => setSelectedImage(null)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton className="justify-content-center">
+          <Modal.Title className="text-center w-100">{selectedImage?.title}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center">
+          <img
+            src={`http://localhost:5000/uploads/${selectedImage?.filename}`}
+            alt={selectedImage?.title}
+            style={{ width: "100%", maxHeight: "80vh", objectFit: "contain" }}
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="danger" onClick={() => setSelectedImage(null)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

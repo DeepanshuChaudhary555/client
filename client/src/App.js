@@ -32,7 +32,6 @@ const Main = () => (
     <Route path="/uploadimage" element={<UploadImage />} />
     <Route path="/profile" element={<Profile />} />
     <Route path="/logout" element={<Logout />} />
-    {/* Catch all unmatched routes and redirect to login */}
     <Route path="*" element={<Navigate to="/login" replace />} />
   </Routes>
 );

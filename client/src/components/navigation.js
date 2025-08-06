@@ -29,7 +29,7 @@ const Navigation = () => {
       <div className="container-fluid d-flex justify-content-center align-items-center">
 
         <NavLink className="navbar-brand mx-3" to="/home">
-          NTCC Year 2
+          NTCC YEAR 2
         </NavLink>
 
         <button
@@ -48,12 +48,12 @@ const Navigation = () => {
           <ul className="navbar-nav d-flex flex-row">
             <li className="nav-item mx-2">
               <NavLink className="nav-link" to="/previewimage">
-                Uploaded Images
+                VIEW UPLOADED IMAGES
               </NavLink>
             </li>
             <li className="nav-item mx-2">
               <NavLink className="nav-link" to="/uploadimage">
-                Upload New Images
+                UPLOAD NEW IMAGES
               </NavLink>
             </li>
             <li className="nav-item dropdown mx-2">
@@ -64,17 +64,17 @@ const Navigation = () => {
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
               >
-                My Account
+                MY ACCOUNT
               </a>
               <ul className="dropdown-menu">
                 <li>
                   <NavLink className="dropdown-item" to="/profile">
-                    Profile
+                    PROFILE
                   </NavLink>
                 </li>
                 <li>
                   <button className="dropdown-item" onClick={handleLogout}>
-                    Logout
+                    LOGOUT
                   </button>
                 </li>
               </ul>

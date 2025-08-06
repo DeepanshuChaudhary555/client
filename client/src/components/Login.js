@@ -112,8 +112,7 @@ const Login = () => {
 
         <button
           type="submit"
-          className="btn btn-primary col-12"
-          disabled={!isFormValid}
+          className="btn btn-primary col-12 my-3"
         >
           Login
         </button>

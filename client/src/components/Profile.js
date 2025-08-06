@@ -20,6 +20,10 @@ const Profile = () => {
   const [capsLockNew, setCapsLockNew] = useState(false);
   const [capsLockConfirm, setCapsLockConfirm] = useState(false);
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteStatus, setDeleteStatus] = useState("");
+
   const togglePasswordVisibility = (field) => {
     if (field === "current") setShowCurrentPassword((prev) => !prev);
     if (field === "new") setShowNewPassword((prev) => !prev);
@@ -94,6 +98,24 @@ const Profile = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setDeleteError("");
+    try {
+      await axios.post(
+        "http://localhost:5000/delete-account",
+        {},
+        { withCredentials: true }
+      );
+      setDeleteStatus("Account deleted successfully. Redirecting...");
+      localStorage.removeItem("user_id");
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
+    } catch (err) {
+      setDeleteError(err.response?.data?.error || "Failed to delete account.");
+    }
+  };
+
   const CapsLockWarning = ({ isOn }) =>
     isOn ? (
       <small
@@ -119,7 +141,6 @@ const Profile = () => {
       </p>
 
       <form onSubmit={handleSubmit}>
-
         <div className="mb-3" style={{ position: "relative" }}>
           <label>Current Password</label>
           <div className="input-group">
@@ -139,7 +160,11 @@ const Profile = () => {
               onClick={() => togglePasswordVisibility("current")}
               tabIndex={-1}
             >
-              <i className={`bi ${showCurrentPassword ? "bi-eye-slash" : "bi-eye"}`} />
+              <i
+                className={`bi ${
+                  showCurrentPassword ? "bi-eye-slash" : "bi-eye"
+                }`}
+              />
             </button>
           </div>
           <CapsLockWarning isOn={capsLockCurrent} />
@@ -164,7 +189,9 @@ const Profile = () => {
               onClick={() => togglePasswordVisibility("new")}
               tabIndex={-1}
             >
-              <i className={`bi ${showNewPassword ? "bi-eye-slash" : "bi-eye"}`} />
+              <i
+                className={`bi ${showNewPassword ? "bi-eye-slash" : "bi-eye"}`}
+              />
             </button>
           </div>
           <CapsLockWarning isOn={capsLockNew} />
@@ -189,7 +216,11 @@ const Profile = () => {
               onClick={() => togglePasswordVisibility("confirm")}
               tabIndex={-1}
             >
-              <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`} />
+              <i
+                className={`bi ${
+                  showConfirmPassword ? "bi-eye-slash" : "bi-eye"
+                }`}
+              />
             </button>
           </div>
           <CapsLockWarning isOn={capsLockConfirm} />
@@ -198,10 +229,49 @@ const Profile = () => {
         {error && <div className="text-danger mb-2">{error}</div>}
         {statusMessage && <div className="text-success mb-2">{statusMessage}</div>}
 
-        <button type="submit" className="btn btn-primary col-12">
+        <button type="submit" className="btn btn-primary col-12 my-3">
           Update Password
         </button>
       </form>
+
+      <hr />
+
+      <div>
+        <button
+          className="btn btn-danger col-12 my-3"
+          onClick={() => setShowDeleteConfirm(true)}
+        >
+          Delete Account
+        </button>
+
+        {showDeleteConfirm && (
+          <div className="alert alert-warning mt-3">
+            <p>
+              Are you sure you want to <strong>delete your account</strong>? This
+              action is <strong>irreversible</strong> and will delete all your images.
+            </p>
+            {deleteError && <p className="text-danger">{deleteError}</p>}
+            {deleteStatus && <p className="text-success">{deleteStatus}</p>}
+
+            <button
+              className="btn btn-danger me-2"
+              onClick={handleDeleteAccount}
+            >
+              Yes, Delete My Account
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                setShowDeleteConfirm(false);
+                setDeleteError("");
+                setDeleteStatus("");
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

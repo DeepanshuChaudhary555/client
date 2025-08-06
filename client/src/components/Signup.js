@@ -17,16 +17,27 @@ const Signup = () => {
   const [capsLockPassword, setCapsLockPassword] = useState(false);
   const [capsLockConfirm, setCapsLockConfirm] = useState(false);
 
+  const validateEmail = (email) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "email") {
+      if (!validateEmail(value)) {
+        setErrors((prev) => ({ ...prev, email: "Invalid email address" }));
+      } else {
+        setErrors((prev) => {
+          const { email, ...rest } = prev;
+          return rest;
+        });
+      }
+    }
   };
 
   const togglePassword = () => setShowPassword((prev) => !prev);
   const toggleConfirmPassword = () => setShowConfirmPassword((prev) => !prev);
-
-  const validateEmail = (email) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
   const handleCapsLock = (e, field) => {
     const isCapsOn = e.getModifierState && e.getModifierState("CapsLock");
@@ -67,9 +78,13 @@ const Signup = () => {
         },
         { withCredentials: true }
       );
-      navigate("/login");
+      navigate("/home");
     } catch (err) {
-      setServerMessage("Signup failed. Email already in use.");
+      if (err.response && err.response.data && err.response.data.message) {
+        setServerMessage(err.response.data.message);
+      } else {
+        setServerMessage("Signup failed. Please try again.");
+      }
     }
   };
 
@@ -186,7 +201,7 @@ const Signup = () => {
           <div className="text-danger text-center mb-3">{serverMessage}</div>
         )}
 
-        <button type="submit" className="btn btn-primary col-12">
+        <button type="submit" className="btn btn-primary col-12 my-3">
           Sign Up
         </button>
       </form>

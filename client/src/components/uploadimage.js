@@ -3,6 +3,7 @@ import axios from "axios";
 
 const UploadImage = () => {
   const [file, setFile] = useState(null);
+  const [title, setTitle] = useState("");
   const [preview, setPreview] = useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,11 +33,17 @@ const UploadImage = () => {
       return;
     }
 
+    if (!title.trim()) {
+      setMessage("Please enter a title for the image.");
+      return;
+    }
+
     setLoading(true);
     setMessage("");
 
     const formData = new FormData();
     formData.append("image", file);
+    formData.append("title", title);
 
     try {
       const res = await axios.post("http://localhost:5000/upload", formData, {
@@ -48,6 +55,7 @@ const UploadImage = () => {
 
       setMessage("Image uploaded successfully!");
       setFile(null);
+      setTitle(""); 
       setPreview(null);
 
       if (fileInputRef.current) {
@@ -64,13 +72,25 @@ const UploadImage = () => {
   return (
     <div className="container mt-5">
       <h2>Upload Image</h2>
+
+      <input
+        type="text"
+        className="form-control mb-3"
+        placeholder="Enter image title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        disabled={loading}
+      />
+
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
         className="form-control mb-3"
         onChange={handleFileChange}
+        disabled={loading}
       />
+
       {preview && (
         <div className="mb-3">
           <img
@@ -80,6 +100,7 @@ const UploadImage = () => {
           />
         </div>
       )}
+
       <button
         className="btn btn-primary"
         onClick={handleUpload}
@@ -87,6 +108,7 @@ const UploadImage = () => {
       >
         {loading ? "Uploading..." : "Upload"}
       </button>
+
       {message && <div className="mt-3 alert alert-info">{message}</div>}
     </div>
   );
