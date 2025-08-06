@@ -16,6 +16,10 @@ const Profile = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const [capsLockCurrent, setCapsLockCurrent] = useState(false);
+  const [capsLockNew, setCapsLockNew] = useState(false);
+  const [capsLockConfirm, setCapsLockConfirm] = useState(false);
+
   const togglePasswordVisibility = (field) => {
     if (field === "current") setShowCurrentPassword((prev) => !prev);
     if (field === "new") setShowNewPassword((prev) => !prev);
@@ -25,6 +29,13 @@ const Profile = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCapsLock = (field, e) => {
+    const isCapsOn = e.getModifierState && e.getModifierState("CapsLock");
+    if (field === "current") setCapsLockCurrent(isCapsOn);
+    if (field === "new") setCapsLockNew(isCapsOn);
+    if (field === "confirm") setCapsLockConfirm(isCapsOn);
   };
 
   useEffect(() => {
@@ -83,6 +94,23 @@ const Profile = () => {
     }
   };
 
+  const CapsLockWarning = ({ isOn }) =>
+    isOn ? (
+      <small
+        style={{
+          color: "orange",
+          position: "absolute",
+          right: "50px",
+          top: "100%",
+          userSelect: "none",
+          marginBottom: "8px",
+          marginTop: "4px",
+        }}
+      >
+        Caps Lock is ON
+      </small>
+    ) : null;
+
   return (
     <div className="container col-md-4 card py-4 mt-5">
       <h3>Profile</h3>
@@ -91,7 +119,8 @@ const Profile = () => {
       </p>
 
       <form onSubmit={handleSubmit}>
-        <div className="mb-3">
+
+        <div className="mb-3" style={{ position: "relative" }}>
           <label>Current Password</label>
           <div className="input-group">
             <input
@@ -100,6 +129,8 @@ const Profile = () => {
               className="form-control"
               value={form.currentPassword}
               onChange={handleChange}
+              onKeyDown={(e) => handleCapsLock("current", e)}
+              onKeyUp={(e) => handleCapsLock("current", e)}
               required
             />
             <button
@@ -108,12 +139,13 @@ const Profile = () => {
               onClick={() => togglePasswordVisibility("current")}
               tabIndex={-1}
             >
-              <i className={`bi ${showCurrentPassword ? "bi-eye" : "bi-eye-slash"}`} />
+              <i className={`bi ${showCurrentPassword ? "bi-eye-slash" : "bi-eye"}`} />
             </button>
           </div>
+          <CapsLockWarning isOn={capsLockCurrent} />
         </div>
 
-        <div className="mb-3">
+        <div className="mb-3" style={{ position: "relative" }}>
           <label>New Password</label>
           <div className="input-group">
             <input
@@ -122,6 +154,8 @@ const Profile = () => {
               className="form-control"
               value={form.newPassword}
               onChange={handleChange}
+              onKeyDown={(e) => handleCapsLock("new", e)}
+              onKeyUp={(e) => handleCapsLock("new", e)}
               required
             />
             <button
@@ -130,12 +164,13 @@ const Profile = () => {
               onClick={() => togglePasswordVisibility("new")}
               tabIndex={-1}
             >
-              <i className={`bi ${showNewPassword ? "bi-eye" : "bi-eye-slash"}`} />
+              <i className={`bi ${showNewPassword ? "bi-eye-slash" : "bi-eye"}`} />
             </button>
           </div>
+          <CapsLockWarning isOn={capsLockNew} />
         </div>
 
-        <div className="mb-3">
+        <div className="mb-3" style={{ position: "relative" }}>
           <label>Confirm New Password</label>
           <div className="input-group">
             <input
@@ -144,6 +179,8 @@ const Profile = () => {
               className="form-control"
               value={form.confirmNewPassword}
               onChange={handleChange}
+              onKeyDown={(e) => handleCapsLock("confirm", e)}
+              onKeyUp={(e) => handleCapsLock("confirm", e)}
               required
             />
             <button
@@ -152,9 +189,10 @@ const Profile = () => {
               onClick={() => togglePasswordVisibility("confirm")}
               tabIndex={-1}
             >
-              <i className={`bi ${showConfirmPassword ? "bi-eye" : "bi-eye-slash"}`} />
+              <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`} />
             </button>
           </div>
+          <CapsLockWarning isOn={capsLockConfirm} />
         </div>
 
         {error && <div className="text-danger mb-2">{error}</div>}

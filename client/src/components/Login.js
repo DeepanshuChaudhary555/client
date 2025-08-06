@@ -8,11 +8,18 @@ const Login = () => {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const [capsLockOn, setCapsLockOn] = useState(false);
+
   const togglePassword = () => setShowPassword((prev) => !prev);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCapsLock = (e) => {
+    const isCapsOn = e.getModifierState && e.getModifierState("CapsLock");
+    setCapsLockOn(isCapsOn);
   };
 
   const handleSubmit = async (e) => {
@@ -61,7 +68,7 @@ const Login = () => {
           />
         </div>
 
-        <div className="mb-3">
+        <div className="mb-3" style={{ position: "relative" }}>
           <label>Password</label>
           <div className="input-group">
             <input
@@ -72,6 +79,8 @@ const Login = () => {
               onChange={handleChange}
               required
               autoComplete="off"
+              onKeyDown={handleCapsLock}
+              onKeyUp={handleCapsLock}
             />
             <button
               type="button"
@@ -79,9 +88,24 @@ const Login = () => {
               onClick={togglePassword}
               tabIndex={-1}
             >
-              <i className={`bi ${showPassword ? "bi-eye" : "bi-eye-slash"}`} />
+              <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`} />
             </button>
           </div>
+          {capsLockOn && (
+            <small
+              style={{
+                color: "orange",
+                position: "absolute",
+                right: "50px",
+                top: "100%",
+                userSelect: "none",
+                marginBottom: "8px",
+                marginTop: "4px",
+              }}
+            >
+              Caps Lock is ON
+            </small>
+          )}
         </div>
 
         {error && <div className="text-danger text-center mb-2">{error}</div>}

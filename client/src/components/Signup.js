@@ -14,6 +14,9 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const [capsLockPassword, setCapsLockPassword] = useState(false);
+  const [capsLockConfirm, setCapsLockConfirm] = useState(false);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -24,6 +27,12 @@ const Signup = () => {
 
   const validateEmail = (email) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
+  const handleCapsLock = (e, field) => {
+    const isCapsOn = e.getModifierState && e.getModifierState("CapsLock");
+    if (field === "password") setCapsLockPassword(isCapsOn);
+    if (field === "confirmPassword") setCapsLockConfirm(isCapsOn);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -85,7 +94,7 @@ const Signup = () => {
 
         <div className="mb-3">
           <label>Password</label>
-          <div className="input-group">
+          <div className="input-group" style={{ position: "relative" }}>
             <input
               type={showPassword ? "text" : "password"}
               name="password"
@@ -93,6 +102,8 @@ const Signup = () => {
               className={`form-control ${errors.password ? "is-invalid" : ""}`}
               value={form.password}
               onChange={handleChange}
+              onKeyDown={(e) => handleCapsLock(e, "password")}
+              onKeyUp={(e) => handleCapsLock(e, "password")}
             />
             <button
               type="button"
@@ -100,8 +111,23 @@ const Signup = () => {
               onClick={togglePassword}
               tabIndex={-1}
             >
-              <i className={`bi ${showPassword ? "bi-eye" : "bi-eye-slash"}`} />
+              <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`} />
             </button>
+            {capsLockPassword && (
+              <small
+                style={{
+                  color: "orange",
+                  position: "absolute",
+                  right: "50px",
+                  top: "100%",
+                  userSelect: "none",
+                  marginBottom: "8px",
+                  marginTop: "4px",
+                }}
+              >
+                Caps Lock is ON
+              </small>
+            )}
           </div>
           {errors.password && (
             <div className="invalid-feedback d-block">{errors.password}</div>
@@ -110,7 +136,7 @@ const Signup = () => {
 
         <div className="mb-3">
           <label>Confirm Password</label>
-          <div className="input-group">
+          <div className="input-group" style={{ position: "relative" }}>
             <input
               type={showConfirmPassword ? "text" : "password"}
               name="confirmPassword"
@@ -120,6 +146,8 @@ const Signup = () => {
               }`}
               value={form.confirmPassword}
               onChange={handleChange}
+              onKeyDown={(e) => handleCapsLock(e, "confirmPassword")}
+              onKeyUp={(e) => handleCapsLock(e, "confirmPassword")}
             />
             <button
               type="button"
@@ -129,10 +157,23 @@ const Signup = () => {
             >
               <i
                 className={`bi ${
-                  showConfirmPassword ? "bi-eye" : "bi-eye-slash"
+                  showConfirmPassword ? "bi-eye-slash" : "bi-eye"
                 }`}
               />
             </button>
+            {capsLockConfirm && (
+              <small
+                style={{
+                  color: "orange",
+                  position: "absolute",
+                  right: "50px",
+                  top: "100%",
+                  userSelect: "none",
+                }}
+              >
+                Caps Lock is ON
+              </small>
+            )}
           </div>
           {errors.confirmPassword && (
             <div className="invalid-feedback d-block">

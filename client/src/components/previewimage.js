@@ -1,8 +1,10 @@
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const PreviewImage = () => {
   const [images, setImages] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(null); // track deleting image filename
@@ -45,25 +47,42 @@ const PreviewImage = () => {
     fetchImages();
   }, []);
 
+  const filteredImages = images.filter((img) =>
+    img.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="container mt-5">
-      <h2>Uploaded Images</h2>
+      <h2 className="mb-4">Uploaded Images</h2>
+
+      {/* 🔍 Search bar */}
+      <div className="mb-4">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Search images by filename..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
       {error && <div className="alert alert-danger">{error}</div>}
 
       {loading ? (
         <p>Loading images...</p>
-      ) : images.length > 0 ? (
+      ) : filteredImages.length > 0 ? (
         <div className="row mt-4">
-          {images.map((img) => (
+          {filteredImages.map((img) => (
             <div key={img} className="col-md-4 mb-3">
               <div className="card">
                 <img
                   src={`http://localhost:5000/uploads/${img}`}
-                  alt="Uploaded"
+                  alt={img}
                   className="card-img-top"
                   style={{ objectFit: "cover", height: "200px" }}
                 />
                 <div className="card-body text-center">
+                  <p className="text-muted small mb-2">{img}</p>
                   <button
                     className="btn btn-danger"
                     onClick={() => handleDelete(img)}
@@ -77,7 +96,7 @@ const PreviewImage = () => {
           ))}
         </div>
       ) : (
-        <p>No images uploaded yet.</p>
+        <p>No images found.</p>
       )}
     </div>
   );

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 const Navigation = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.body.setAttribute("data-bs-theme", isDarkMode ? "dark" : "light");
@@ -12,17 +13,27 @@ const Navigation = () => {
     setIsDarkMode(!isDarkMode);
   };
 
+  const handleLogout = () => {
+    const confirmed = window.confirm("Are you sure you want to logout?");
+    if (confirmed) {
+      localStorage.removeItem("user_id");
+      navigate("/"); // or navigate("/login") if that's your login page
+    }
+  };
+
   return (
     <nav
       className="navbar navbar-expand-lg bg-body-tertiary"
       style={{ backgroundColor: "#161616" }}
     >
-      <div className="container-fluid">
-        <NavLink className="navbar-brand" to="/home">
+      <div className="container-fluid d-flex justify-content-center align-items-center">
+
+        <NavLink className="navbar-brand mx-3" to="/home">
           NTCC Year 2
         </NavLink>
+
         <button
-          className="navbar-toggler"
+          className="navbar-toggler mx-3"
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navbarNavDropdown"
@@ -32,22 +43,23 @@ const Navigation = () => {
         >
           <span className="navbar-toggler-icon"></span>
         </button>
-        <div className="collapse navbar-collapse" id="navbarNavDropdown">
-          <ul className="navbar-nav">
-            <li className="nav-item">
+
+        <div className="collapse navbar-collapse mx-3" id="navbarNavDropdown">
+          <ul className="navbar-nav d-flex flex-row">
+            <li className="nav-item mx-2">
               <NavLink className="nav-link" to="/previewimage">
                 Uploaded Images
               </NavLink>
             </li>
-            <li className="nav-item">
+            <li className="nav-item mx-2">
               <NavLink className="nav-link" to="/uploadimage">
                 Upload New Images
               </NavLink>
             </li>
-            <li className="nav-item dropdown ">
+            <li className="nav-item dropdown mx-2">
               <a
                 className="nav-link dropdown-toggle"
-                to="#"
+                href="#"
                 role="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
@@ -61,38 +73,26 @@ const Navigation = () => {
                   </NavLink>
                 </li>
                 <li>
-                  <NavLink className="dropdown-item" to="/">
+                  <button className="dropdown-item" onClick={handleLogout}>
                     Logout
-                  </NavLink>
+                  </button>
                 </li>
               </ul>
             </li>
           </ul>
-
-          <form className="d-flex ms-auto" role="search">
-            <input
-              className="form-control me-2"
-              type="search"
-              placeholder="Search Images"
-              aria-label="Search"
-            />
-            <button className="btn btn-outline-success" type="submit">
-              <i class="bx bx-search"></i>
-            </button>
-          </form>
-
-          <button
-            className="btn btn-secondary ms-3"
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-          >
-            {isDarkMode ? (
-              <i class="bx  bx-sun-bright"></i>
-            ) : (
-              <i class="bx  bx-moon-star"></i>
-            )}
-          </button>
         </div>
+
+        <button
+          className="btn btn-secondary ms-3"
+          onClick={toggleTheme}
+          aria-label="Toggle theme"
+        >
+          {isDarkMode ? (
+            <i className="bx bx-sun-bright"></i>
+          ) : (
+            <i className="bx bx-moon-star"></i>
+          )}
+        </button>
       </div>
     </nav>
   );
