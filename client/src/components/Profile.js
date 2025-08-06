@@ -43,9 +43,22 @@ const Profile = () => {
   };
 
   useEffect(() => {
+    let attempts = 0;
+    const maxAttempts = 5;
+
     const fetchEmail = async () => {
       const userId = localStorage.getItem("user_id");
-      if (!userId) return;
+
+      if (!userId) {
+        if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(fetchEmail, 300);
+        } else {
+          setError("User ID not found. Please log in again.");
+          setLoadingEmail(false);
+        }
+        return;
+      }
 
       try {
         const res = await axios.get(`http://localhost:5000/user/${userId}`, {
@@ -227,7 +240,9 @@ const Profile = () => {
         </div>
 
         {error && <div className="text-danger mb-2">{error}</div>}
-        {statusMessage && <div className="text-success mb-2">{statusMessage}</div>}
+        {statusMessage && (
+          <div className="text-success mb-2">{statusMessage}</div>
+        )}
 
         <button type="submit" className="btn btn-primary col-12 my-3">
           Update Password

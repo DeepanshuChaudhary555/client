@@ -78,7 +78,7 @@ const Signup = () => {
         },
         { withCredentials: true }
       );
-      navigate("/home");
+      navigate("/login");
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {
         setServerMessage(err.response.data.message);
