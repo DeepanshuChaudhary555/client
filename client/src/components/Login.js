@@ -1,54 +1,75 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const res = await axios.post("http://localhost:5000/login", {
+        email: form.email,
+        password: form.password,
+      });
+
+      console.log("Login response:", res.data); // Debug
+
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token); // ✅ store token
+        navigate("/home"); // ✅ redirect to home
+      } else {
+        setError("Login failed.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Invalid email or password.");
+    }
+  };
+
   return (
-    <div>
-      <div className="container py-3"></div>
-      <div className="container col-md-4 card rounded-7 me-lg-n5 py-3">
-        <h3>Sign In</h3>
-        <form>
-          <div className="row">
-            <div className="mb-3 col-sm-12">
-              <label for="email" className="form-label">
-                Email Address
-              </label>
-              <input
-                type="email"
-                className="form-control"
-                id="exampleinputemail2"
-                aria-describedby="emailHelp"
-              />
-              <div id="emailHelp" className="form-text">
-                We'll never share your email with anyone else.
-              </div>
-            </div>
-            <div className="mb-3">
-              <label for="password" className="form-label">
-                Password
-              </label>
-              <input type="password" id="password" className="form-control" />
-            </div>
-            <div className="mb-3">
-              <button
-                to="/home"
-                type="submit"
-                class="btn btn-outline-primary col-12"
-              >
-                Login
-              </button>
-            </div>
-          </div>
-        </form>
-        <div className="signUp">
-          <p>
-            Don't have an account?{" "}
-            <Link to="/" type="submit" className="">
-              Sign Up
-            </Link>
-          </p>
+    <div className="container col-md-4 card py-4 mt-5">
+      <h3>Login</h3>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-3">
+          <label>Email</label>
+          <input
+            name="email"
+            type="email"
+            className="form-control"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
         </div>
-      </div>
+        <div className="mb-3">
+          <label>Password</label>
+          <input
+            name="password"
+            type="password"
+            className="form-control"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        {error && <div className="text-danger mb-2">{error}</div>}
+        <button type="submit" className="btn btn-primary col-12">
+          Login
+        </button>
+      </form>
+      <p className="mt-3 text-center">
+        Don't have an account? <Link to="/">Sign Up</Link>
+      </p>
     </div>
   );
 };
