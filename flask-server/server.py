@@ -1,121 +1,181 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, session, g
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
-import os, sqlite3, jwt, datetime
-from functools import wraps
+from werkzeug.utils import secure_filename
+import os
+import sqlite3
+import uuid
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True)
 app.secret_key = "supersecretkey"
+CORS(app, supports_credentials=True)
 
-UPLOAD_FOLDER = "uploads"
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = "uploads"
+os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+
+
+def get_db():
+    if "db" not in g:
+        g.db = sqlite3.connect("images.db")
+    return g.db
+
+@app.teardown_appcontext
+def close_db(exception):
+    db = g.pop("db", None)
+    if db:
+        db.close()
 
 def init_db():
-    conn = sqlite3.connect("images.db")
-    c = conn.cursor()
-    c.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, email TEXT UNIQUE, password TEXT)")
-    c.execute("CREATE TABLE IF NOT EXISTS images (id INTEGER PRIMARY KEY, filename TEXT, user_id INTEGER)")
-    conn.commit()
-    conn.close()
+    db = get_db()
+    c = db.cursor()
+    c.execute("""CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY,
+        email TEXT UNIQUE,
+        password TEXT
+    )""")
+    c.execute("""CREATE TABLE IF NOT EXISTS images (
+        id INTEGER PRIMARY KEY,
+        filename TEXT,
+        user_id INTEGER
+    )""")
+    db.commit()
 
-init_db()
 
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        if not token:
-            return jsonify({"error": "Token is missing"}), 401
-        try:
-            token = token.replace("Bearer ", "")
-            data = jwt.decode(token, app.secret_key, algorithms=["HS256"])
-            user_id = data["user_id"]
-        except jwt.ExpiredSignatureError:
-            return jsonify({"error": "Token expired"}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({"error": "Invalid token"}), 401
-        return f(user_id, *args, **kwargs)
-    return decorated
+@app.before_request
+def load_user():
+    g.user_id = session.get("user_id")
+
 
 @app.route("/")
 def index():
-    return "Flask backend with JWT is running!"
+    return "Flask backend is running!"
+
 
 @app.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json()
-    email = data["email"]
-    password = generate_password_hash(data["password"])
+    email = data.get("email")
+    password = generate_password_hash(data.get("password"))
 
     try:
-        conn = sqlite3.connect("images.db")
-        c = conn.cursor()
-        c.execute("INSERT INTO users (email, password) VALUES (?, ?)", (email, password))
-        conn.commit()
+        db = get_db()
+        db.execute("INSERT INTO users (email, password) VALUES (?, ?)", (email, password))
+        db.commit()
         return jsonify({"message": "User created"}), 201
     except sqlite3.IntegrityError:
         return jsonify({"error": "Email already exists"}), 409
-    finally:
-        conn.close()
+
 
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
-    email = data["email"]
-    password = data["password"]
+    email = data.get("email")
+    password = data.get("password")
 
-    conn = sqlite3.connect("images.db")
-    c = conn.cursor()
-    c.execute("SELECT id, password FROM users WHERE email = ?", (email,))
-    user = c.fetchone()
-    conn.close()
+    db = get_db()
+    user = db.execute("SELECT id, password FROM users WHERE email = ?", (email,)).fetchone()
 
     if user and check_password_hash(user[1], password):
-        token = jwt.encode(
-            {
-                "user_id": user[0],
-                "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
-            },
-            app.secret_key,
-            algorithm="HS256"
-        )
-        return jsonify({"token": token})
+        session["user_id"] = user[0]
+        return jsonify({"message": "Login successful", "user_id": user[0]})
     return jsonify({"error": "Invalid credentials"}), 401
 
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return jsonify({"message": "Logged out"})
+
+
 @app.route("/upload", methods=["POST"])
-@token_required
-def upload_image(user_id):
+def upload_image():
+    if not g.user_id:
+        return jsonify({"error": "Not logged in"}), 401
+
     if "image" not in request.files:
-        return jsonify({"error": "Image is required"}), 400
+        return jsonify({"error": "No image provided"}), 400
 
     file = request.files["image"]
-    filename = file.filename
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    if file.filename == "":
+        return jsonify({"error": "No file selected"}), 400
+
+    filename = secure_filename(file.filename)
+    unique_filename = f"{uuid.uuid4().hex}_{filename}"
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], unique_filename)
     file.save(filepath)
 
-    conn = sqlite3.connect("images.db")
-    c = conn.cursor()
-    c.execute("INSERT INTO images (filename, user_id) VALUES (?, ?)", (filename, user_id))
-    conn.commit()
-    conn.close()
+    db = get_db()
+    db.execute("INSERT INTO images (filename, user_id) VALUES (?, ?)", (unique_filename, g.user_id))
+    db.commit()
 
-    return jsonify({"message": "Upload successful"})
+    return jsonify({"message": "Upload successful", "filename": unique_filename}), 201
 
-@app.route("/images")
-@token_required
-def get_images(user_id):
-    conn = sqlite3.connect("images.db")
-    c = conn.cursor()
-    c.execute("SELECT filename FROM images WHERE user_id = ?", (user_id,))
-    files = [row[0] for row in c.fetchall()]
-    conn.close()
-    return jsonify(files)
+
+@app.route("/images", methods=["GET"])
+def get_images():
+    if not g.user_id:
+        return jsonify({"error": "Not logged in"}), 401
+
+    db = get_db()
+    rows = db.execute("SELECT filename FROM images WHERE user_id = ?", (g.user_id,)).fetchall()
+    filenames = [row[0] for row in rows]
+    return jsonify(filenames)
+
+
+@app.route("/delete-image", methods=["POST"])
+def delete_image():
+    if not g.user_id:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    filename = data.get("filename")
+
+    db = get_db()
+    db.execute("DELETE FROM images WHERE filename = ? AND user_id = ?", (filename, g.user_id))
+    db.commit()
+
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+
+    return jsonify({"message": "Image deleted"})
+
 
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
+
+@app.route("/change-password", methods=["POST"])
+def change_password():
+    if not g.user_id:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    current_password = data.get("current_password")
+    new_password = data.get("new_password")
+
+    db = get_db()
+    user = db.execute("SELECT password FROM users WHERE id = ?", (g.user_id,)).fetchone()
+
+    if user and check_password_hash(user[0], current_password):
+        new_hash = generate_password_hash(new_password)
+        db.execute("UPDATE users SET password = ? WHERE id = ?", (new_hash, g.user_id))
+        db.commit()
+        return jsonify({"message": "Password updated"})
+    return jsonify({"error": "Current password incorrect"}), 400
+
+
+@app.route("/user/<int:user_id>")
+def get_user(user_id):
+    db = get_db()
+    row = db.execute("SELECT email FROM users WHERE id = ?", (user_id,)).fetchone()
+    if row:
+        return jsonify({"email": row[0]})
+    return jsonify({"error": "User not found"}), 404
+
+
 if __name__ == "__main__":
+    with app.app_context():
+        init_db()
     app.run(debug=True)
